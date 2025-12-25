@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anima - AI Avatar Chat</title>
     <meta name="description" content="Chat com avatar de IA animado">
     <link rel="stylesheet" href="style.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Header -->
@@ -36,19 +38,15 @@
                 <div class="chat-messages" id="chatMessages">
                     <div class="message assistant">
                         <div class="message-content">
-                            Olá! Eu sou a Anima. Faça upload de uma foto para me dar um rosto, e depois podemos conversar! 😊
+                            Olá! Eu sou a Anima. Faça upload de uma foto para me dar um rosto, e depois podemos
+                            conversar! 😊
                         </div>
                     </div>
                 </div>
-                
+
                 <form class="chat-input-form" id="chatForm">
-                    <input 
-                        type="text" 
-                        id="messageInput" 
-                        placeholder="Digite sua mensagem..." 
-                        autocomplete="off"
-                        required
-                    >
+                    <input type="text" id="messageInput" placeholder="Digite sua mensagem..." autocomplete="off"
+                        required>
                     <button type="submit" id="sendButton">
                         <span class="send-icon">➤</span>
                     </button>
@@ -62,4 +60,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>
