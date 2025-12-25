@@ -12,6 +12,11 @@ let avatarImage = null;
 let faceDetection = null;
 let isModelLoaded = false;
 
+// Audio state (global to avoid recreating)
+let audioContext = null;
+let analyser = null;
+let audioSource = null;
+
 // DOM Elements
 const avatarContainer = document.getElementById('avatarContainer');
 const avatarPlaceholder = document.getElementById('avatarPlaceholder');
@@ -105,7 +110,7 @@ avatarInput.addEventListener('change', async (e) => {
     }
 });
 
-function drawAvatar(mouthOpen = 0) {
+function drawAvatar(speakingIntensity = 0) {
     if (!avatarImage || !faceDetection) return;
 
     const ctx = avatarCanvas.getContext('2d');
@@ -123,37 +128,21 @@ function drawAvatar(mouthOpen = 0) {
     const sw = box.width + padding * 2;
     const sh = box.height + padding * 2;
 
-    // Draw cropped and scaled image
-    ctx.drawImage(avatarImage, sx, sy, sw, sh, 0, 0, size, size);
+    // Apply subtle scale effect when speaking
+    const scale = 1 + (speakingIntensity * 0.02);
+    const offset = (size * (scale - 1)) / 2;
 
-    // If speaking, add mouth animation overlay
-    if (mouthOpen > 0) {
-        const landmarks = faceDetection.landmarks;
-        const mouth = landmarks.getMouth();
+    ctx.save();
 
-        // Calculate mouth position in canvas coordinates
-        const scaleX = size / sw;
-        const scaleY = size / sh;
+    // Draw with subtle scale animation
+    ctx.drawImage(
+        avatarImage,
+        sx, sy, sw, sh,
+        -offset, -offset,
+        size * scale, size * scale
+    );
 
-        const mouthCenterX = ((mouth[14].x + mouth[18].x) / 2 - sx) * scaleX;
-        const mouthCenterY = ((mouth[14].y + mouth[18].y) / 2 - sy) * scaleY;
-        const mouthWidth = (mouth[6].x - mouth[0].x) * scaleX;
-
-        // Draw animated mouth opening
-        ctx.save();
-        ctx.globalAlpha = 0.7;
-        ctx.fillStyle = '#1a0a0a';
-        ctx.beginPath();
-        ctx.ellipse(
-            mouthCenterX,
-            mouthCenterY,
-            mouthWidth * 0.4,
-            mouthOpen * 10,
-            0, 0, Math.PI * 2
-        );
-        ctx.fill();
-        ctx.restore();
-    }
+    ctx.restore();
 }
 
 function setAvatarStatus(text, type = '') {
@@ -276,16 +265,24 @@ async function playAudioWithLipSync(base64Audio) {
         const blob = new Blob([byteArray], { type: 'audio/mp3' });
 
         // Set audio source
-        audioPlayer.src = URL.createObjectURL(blob);
+        const audioUrl = URL.createObjectURL(blob);
 
-        // Create audio context for analysis
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
+        // Initialize audio context only once
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            audioSource = audioContext.createMediaElementSource(audioPlayer);
+            audioSource.connect(analyser);
+            analyser.connect(audioContext.destination);
+        }
 
-        const source = audioContext.createMediaElementSource(audioPlayer);
-        source.connect(analyser);
-        analyser.connect(audioContext.destination);
+        // Resume context if suspended (browser autoplay policy)
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
+
+        audioPlayer.src = audioUrl;
 
         // Start speaking animation
         avatarContainer.classList.add('speaking');
@@ -303,9 +300,9 @@ async function playAudioWithLipSync(base64Audio) {
                 sum += dataArray[i];
             }
             const average = sum / 20;
-            const mouthOpen = Math.min(average / 50, 2);
+            const speakingIntensity = Math.min(average / 50, 2);
 
-            drawAvatar(mouthOpen);
+            drawAvatar(speakingIntensity);
 
             animationId = requestAnimationFrame(animateLipSync);
         }
@@ -318,12 +315,14 @@ async function playAudioWithLipSync(base64Audio) {
             cancelAnimationFrame(animationId);
             avatarContainer.classList.remove('speaking');
             drawAvatar(0);
+            URL.revokeObjectURL(audioUrl);
             resolve();
         };
 
         audioPlayer.onerror = () => {
             cancelAnimationFrame(animationId);
             avatarContainer.classList.remove('speaking');
+            URL.revokeObjectURL(audioUrl);
             resolve();
         };
 
