@@ -254,7 +254,7 @@ function escapeHtml(text) {
 // ========================================
 
 async function playAudioWithLipSync(base64Audio) {
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
         // Convert base64 to blob
         const byteCharacters = atob(base64Audio);
         const byteNumbers = new Array(byteCharacters.length);
