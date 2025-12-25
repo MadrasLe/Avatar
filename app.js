@@ -9,6 +9,7 @@ const API_URL = 'https://madras1-anima.hf.space'; // HuggingFace Space
 // State
 let chatHistory = [];
 let avatarImage = null;
+let avatarImageBase64 = null;  // Para enviar ao SadTalker
 let faceDetection = null;
 let isModelLoaded = false;
 
@@ -21,8 +22,10 @@ let audioSource = null;
 const avatarContainer = document.getElementById('avatarContainer');
 const avatarPlaceholder = document.getElementById('avatarPlaceholder');
 const avatarCanvas = document.getElementById('avatarCanvas');
+const avatarVideo = document.getElementById('avatarVideo');
 const avatarInput = document.getElementById('avatarInput');
 const avatarStatus = document.getElementById('avatarStatus');
+const useVideoToggle = document.getElementById('useVideoToggle');
 const chatMessages = document.getElementById('chatMessages');
 const chatForm = document.getElementById('chatForm');
 const messageInput = document.getElementById('messageInput');
@@ -95,12 +98,20 @@ avatarInput.addEventListener('change', async (e) => {
         faceDetection = detection;
         avatarImage = img;
 
+        // Save as base64 for SadTalker
+        const reader = new FileReader();
+        reader.onload = () => {
+            avatarImageBase64 = reader.result.split(',')[1];
+        };
+        reader.readAsDataURL(file);
+
         // Draw to canvas
         drawAvatar();
 
-        // Show canvas, hide placeholder
+        // Show canvas, hide placeholder and video
         avatarPlaceholder.classList.add('hidden');
         avatarCanvas.classList.remove('hidden');
+        avatarVideo.classList.add('hidden');
 
         setAvatarStatus('Avatar configurado! ✓', 'success');
 
@@ -171,13 +182,18 @@ chatForm.addEventListener('submit', async (e) => {
     const typingIndicator = showTypingIndicator();
 
     try {
+        // Check if video mode is enabled
+        const useVideo = useVideoToggle && useVideoToggle.checked && avatarImageBase64;
+
         // Send to API
         const response = await fetch(`${API_URL}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: message,
-                history: chatHistory
+                history: chatHistory,
+                use_video: useVideo,
+                avatar_image: useVideo ? avatarImageBase64 : null
             })
         });
 
@@ -202,8 +218,10 @@ chatForm.addEventListener('submit', async (e) => {
             chatHistory = chatHistory.slice(-20);
         }
 
-        // Play audio with lip sync
-        if (data.audio_base64) {
+        // Play video or audio
+        if (data.video_base64) {
+            await playVideo(data.video_base64);
+        } else if (data.audio_base64) {
             await playAudioWithLipSync(data.audio_base64);
         }
 
@@ -328,6 +346,58 @@ async function playAudioWithLipSync(base64Audio) {
 
         audioPlayer.play().catch(error => {
             console.error('Audio play error:', error);
+            avatarContainer.classList.remove('speaking');
+            resolve();
+        });
+    });
+}
+
+// ========================================
+// Video Playback (SadTalker)
+// ========================================
+
+async function playVideo(base64Video) {
+    return new Promise((resolve) => {
+        // Convert base64 to blob
+        const byteCharacters = atob(base64Video);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'video/mp4' });
+
+        const videoUrl = URL.createObjectURL(blob);
+
+        // Hide canvas, show video
+        avatarCanvas.classList.add('hidden');
+        avatarVideo.classList.remove('hidden');
+
+        // Set video source
+        avatarVideo.src = videoUrl;
+
+        // Speaking animation
+        avatarContainer.classList.add('speaking');
+
+        avatarVideo.onended = () => {
+            avatarContainer.classList.remove('speaking');
+            // Show canvas again, hide video
+            avatarVideo.classList.add('hidden');
+            avatarCanvas.classList.remove('hidden');
+            URL.revokeObjectURL(videoUrl);
+            resolve();
+        };
+
+        avatarVideo.onerror = () => {
+            avatarContainer.classList.remove('speaking');
+            avatarVideo.classList.add('hidden');
+            avatarCanvas.classList.remove('hidden');
+            URL.revokeObjectURL(videoUrl);
+            resolve();
+        };
+
+        avatarVideo.play().catch(error => {
+            console.error('Video play error:', error);
             avatarContainer.classList.remove('speaking');
             resolve();
         });

@@ -124,6 +124,13 @@ body {
     object-fit: cover;
 }
 
+.avatar-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
 .avatar-status {
     font-size: 0.8rem;
     color: var(--text-secondary);
@@ -136,6 +143,33 @@ body {
 
 .avatar-status.error {
     color: var(--error);
+}
+
+.video-toggle {
+    margin-top: 0.5rem;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.toggle-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-primary);
+}
+
+.toggle-text {
+    transition: color 0.2s;
+}
+
+.toggle-label:hover .toggle-text {
+    color: var(--accent-secondary);
 }
 
 .hidden {
@@ -169,8 +203,15 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .message.user {
@@ -272,12 +313,25 @@ body {
     animation: bounce 1.4s ease-in-out infinite;
 }
 
-.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
 
 @keyframes bounce {
-    0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-8px); }
+
+    0%,
+    60%,
+    100% {
+        transform: translateY(0);
+    }
+
+    30% {
+        transform: translateY(-8px);
+    }
 }
 
 /* Speaking Animation */
@@ -286,8 +340,13 @@ body {
 }
 
 @keyframes pulse {
-    from { box-shadow: 0 0 20px var(--accent-glow); }
-    to { box-shadow: 0 0 40px var(--accent-glow), 0 0 60px var(--accent-glow); }
+    from {
+        box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    to {
+        box-shadow: 0 0 40px var(--accent-glow), 0 0 60px var(--accent-glow);
+    }
 }
 
 /* Scrollbar */
@@ -314,7 +373,7 @@ body {
         width: 150px;
         height: 150px;
     }
-    
+
     .message {
         max-width: 90%;
     }
