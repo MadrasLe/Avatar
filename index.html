@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anima - AI Avatar Chat</title>
+    <meta name="description" content="Chat com avatar de IA animado">
+    <link rel="stylesheet" href="style.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">✨ Anima</h1>
+            <p class="tagline">Seu avatar de IA</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Avatar Section -->
+            <section class="avatar-section">
+                <div class="avatar-container" id="avatarContainer">
+                    <div class="avatar-placeholder" id="avatarPlaceholder">
+                        <span class="avatar-icon">🎭</span>
+                        <p>Clique para adicionar avatar</p>
+                    </div>
+                    <canvas id="avatarCanvas" class="avatar-canvas hidden"></canvas>
+                    <input type="file" id="avatarInput" accept="image/*" hidden>
+                </div>
+                <div class="avatar-status" id="avatarStatus"></div>
+            </section>
+
+            <!-- Chat Section -->
+            <section class="chat-section">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <div class="message-content">
+                            Olá! Eu sou a Anima. Faça upload de uma foto para me dar um rosto, e depois podemos conversar! 😊
+                        </div>
+                    </div>
+                </div>
+                
+                <form class="chat-input-form" id="chatForm">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Digite sua mensagem..." 
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="submit" id="sendButton">
+                        <span class="send-icon">➤</span>
+                    </button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <!-- Audio element for TTS -->
+    <audio id="audioPlayer" hidden></audio>
+
+    <script src="app.js"></script>
+</body>
+</html>
